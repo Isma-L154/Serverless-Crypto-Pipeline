@@ -8,12 +8,10 @@ __pycache__/
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
-.terraform.tfvars
-
+terraform.tfvars
 
 # AWS
 .aws/
-EOF
 
 
 # C extensions
