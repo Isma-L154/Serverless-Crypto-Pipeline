@@ -12,7 +12,7 @@ resource "aws_s3_object" "dependencies_layer" {
   bucket     = var.dashboard_bucket
   key        = "layers/dependencies.zip"
   source     = "${path.root}/../lambda/layers/dependencies.zip"
-  etag       = filemd5("${path.root}/../lambda/layers/dependencies.zip")
+  etag       = data.archive_file.dependencies_layer_zip.output_md5
   depends_on = [data.archive_file.dependencies_layer_zip]
 }
 

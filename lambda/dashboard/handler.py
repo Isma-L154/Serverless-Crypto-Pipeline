@@ -1,10 +1,10 @@
 import json
 import os
 import boto3
-import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from pyathena import connect
+from pyathena.pandas.cursor import PandasCursor
 from datetime import datetime, timezone
 from utils import format_number, COIN_COLORS, COIN_SYMBOLS
 
@@ -14,17 +14,20 @@ DASHBOARD_BUCKET = os.environ["DASHBOARD_BUCKET"]
 AWS_REGION = os.environ["AWS_REGION_NAME"]
 
 
-def query_athena(query: str) -> pd.DataFrame:
-    """Execute a SQL query on Athena and return a DataFrame."""
+def query_athena(query: str) -> list[dict]:
+    """Execute a SQL query on Athena and return results as list of dicts."""
     conn = connect(
         s3_staging_dir=f"s3://{ATHENA_RESULTS_BUCKET}/",
         region_name=AWS_REGION,
         schema_name=ATHENA_DATABASE
     )
-    return pd.read_sql(query, conn)
+    cursor = conn.cursor()
+    cursor.execute(query)
+    columns = [desc[0] for desc in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
-def get_latest_prices() -> pd.DataFrame:
+def get_latest_prices() -> list[dict]:
     """Get the most recent price for each coin."""
     return query_athena("""
         SELECT coin_id, price_usd, market_cap_usd,
@@ -35,7 +38,7 @@ def get_latest_prices() -> pd.DataFrame:
     """)
 
 
-def get_price_history() -> pd.DataFrame:
+def get_price_history() -> list[dict]:
     """Get full price history for all coins."""
     return query_athena("""
         SELECT coin_id, price_usd, change_24h_pct, timestamp
@@ -44,16 +47,17 @@ def get_price_history() -> pd.DataFrame:
     """)
 
 
-def build_charts(latest: pd.DataFrame, history: pd.DataFrame) -> dict:
+def build_charts(latest: list[dict], history: list[dict]) -> dict:
     """Generate all Plotly charts and return them as JSON."""
 
     # Price history line chart
     fig_history = go.Figure()
-    for coin in history["coin_id"].unique():
-        coin_data = history[history["coin_id"] == coin]
+    coins = list(set(row["coin_id"] for row in history))
+    for coin in coins:
+        coin_data = [row for row in history if row["coin_id"] == coin]
         fig_history.add_trace(go.Scatter(
-            x=coin_data["timestamp"],
-            y=coin_data["price_usd"],
+            x=[row["timestamp"] for row in coin_data],
+            y=[row["price_usd"] for row in coin_data],
             name=COIN_SYMBOLS.get(coin, coin.upper()),
             line=dict(color=COIN_COLORS.get(coin, "#888"), width=2),
             mode="lines"
@@ -69,12 +73,13 @@ def build_charts(latest: pd.DataFrame, history: pd.DataFrame) -> dict:
     )
 
     # Market cap bar chart
-    fig_mcap = px.bar(
-        latest, x="coin_id", y="market_cap_usd",
-        color="coin_id", color_discrete_map=COIN_COLORS,
-        template="plotly_dark"
-    )
+    fig_mcap = go.Figure(go.Bar(
+        x=[row["coin_id"] for row in latest],
+        y=[row["market_cap_usd"] for row in latest],
+        marker_color=[COIN_COLORS.get(row["coin_id"], "#888") for row in latest]
+    ))
     fig_mcap.update_layout(
+        template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
@@ -84,13 +89,13 @@ def build_charts(latest: pd.DataFrame, history: pd.DataFrame) -> dict:
     )
 
     # 24h change bar chart
-    fig_change = px.bar(
-        latest, x="coin_id", y="change_24h_pct",
-        color="change_24h_pct",
-        color_continuous_scale=["#FF4D4D", "#00C48C"],
-        template="plotly_dark"
-    )
+    fig_change = go.Figure(go.Bar(
+        x=[row["coin_id"] for row in latest],
+        y=[row["change_24h_pct"] for row in latest],
+        marker_color=["#00C48C" if row["change_24h_pct"] >= 0 else "#FF4D4D" for row in latest]
+    ))
     fig_change.update_layout(
+        template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
@@ -106,12 +111,12 @@ def build_charts(latest: pd.DataFrame, history: pd.DataFrame) -> dict:
     }
 
 
-def build_cards(latest: pd.DataFrame) -> list:
+def build_cards(latest: list[dict]) -> list:
     """Build the data structure for metric cards."""
     cards = []
-    for _, row in latest.iterrows():
+    for row in latest:
         coin = row["coin_id"]
-        change = row["change_24h_pct"]
+        change = row["change_24h_pct"] or 0
         cards.append({
             "symbol": COIN_SYMBOLS.get(coin, coin.upper()),
             "name": coin.capitalize(),
