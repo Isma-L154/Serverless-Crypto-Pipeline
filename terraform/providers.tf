@@ -11,6 +11,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
+    archive = { # Used for packaging the Lambda function code, so i can easily upload it to AWS Lambda without having to manually zip it and upload it every time i make a change
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
+    }
   }
 }
 provider "aws" {

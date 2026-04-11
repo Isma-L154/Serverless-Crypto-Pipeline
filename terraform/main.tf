@@ -26,3 +26,13 @@ module "kinesis" {
   s3_bucket_id      = module.s3.bucket_id
   firehose_role_arn = module.iam.firehose_role_arn
 }
+
+# Call the Lambda module to create a Lambda function that fetches crypto prices and sends them to the Kinesis Firehose stream
+module "lambda" {
+  source = "./modules/lambda"
+
+  project_name         = var.project_name
+  environment          = var.environment
+  lambda_role_arn      = module.iam.lambda_role_arn
+  firehose_stream_name = module.kinesis.firehose_stream_name
+}
