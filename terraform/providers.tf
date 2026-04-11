@@ -17,6 +17,7 @@ terraform {
     }
   }
 }
+# Configure the AWS provider with the region and default tags for all resources
 provider "aws" {
   region = var.aws_region
 
