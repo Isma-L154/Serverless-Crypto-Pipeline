@@ -31,10 +31,14 @@ module "kinesis" {
 module "lambda" {
   source = "./modules/lambda"
 
-  project_name         = var.project_name
-  environment          = var.environment
-  lambda_role_arn      = module.iam.lambda_role_arn
-  firehose_stream_name = module.kinesis.firehose_stream_name
+  project_name          = var.project_name
+  environment           = var.environment
+  aws_region            = var.aws_region
+  lambda_role_arn       = module.iam.lambda_role_arn
+  firehose_stream_name  = module.kinesis.firehose_stream_name
+  athena_database       = module.glue.database_name
+  athena_results_bucket = module.s3.athena_results_bucket
+  dashboard_bucket      = module.s3.dashboard_bucket_name
 }
 
 # Call the Glue module to create a Glue crawler that catalogs the data in the S3 bucket

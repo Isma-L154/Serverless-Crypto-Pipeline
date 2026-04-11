@@ -76,3 +76,44 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "crypto_data" {
     }
   }
 }
+
+# Public bucket for the dashboard HTML
+resource "aws_s3_bucket" "dashboard" {
+  bucket = "${var.project_name}-${var.environment}-dashboard-${random_id.suffix.hex}"
+}
+
+# Allow public access for the dashboard bucket
+resource "aws_s3_bucket_public_access_block" "dashboard" {
+  bucket = aws_s3_bucket.dashboard.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+# Bucket policy - anyone can read the dashboard
+resource "aws_s3_bucket_policy" "dashboard" {
+  bucket     = aws_s3_bucket.dashboard.id
+  depends_on = [aws_s3_bucket_public_access_block.dashboard]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "PublicReadGetObject"
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = "s3:GetObject"
+      Resource  = "${aws_s3_bucket.dashboard.arn}/*"
+    }]
+  })
+}
+
+# Enable static website hosting
+resource "aws_s3_bucket_website_configuration" "dashboard" {
+  bucket = aws_s3_bucket.dashboard.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
