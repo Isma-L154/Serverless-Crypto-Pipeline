@@ -3,6 +3,21 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+terraform.tfvars
+
+# AWS
+.aws/
+
+# Lambda Layers
+lambda/layers/
+lambda/*.zip
+lambda/**/*.zip
+
 # C extensions
 *.so
 
