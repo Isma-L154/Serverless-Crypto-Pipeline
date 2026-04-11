@@ -34,7 +34,12 @@ jobs:
 
       - name: Create terraform.tfvars
         working-directory: ${{ env.WORKING_DIR }}
-        run: echo "${{ secrets.TF_VARS }}" > terraform.tfvars
+        run: |
+          cat > terraform.tfvars << 'EOF'
+          aws_region   = "us-east-1"
+          environment  = "dev"
+          project_name = "crypto-pipeline"
+          EOF
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -129,7 +134,12 @@ jobs:
 
       - name: Create terraform.tfvars
         working-directory: ${{ env.WORKING_DIR }}
-        run: echo "${{ secrets.TF_VARS }}" > terraform.tfvars
+        run: |
+          cat > terraform.tfvars << 'EOF'
+          aws_region   = "us-east-1"
+          environment  = "dev"
+          project_name = "crypto-pipeline"
+          EOF
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
