@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Pipeline Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #21262d;
+        }
+
+        h1 { font-size: 1.5rem; font-weight: 600; }
+
+        .badge {
+            background: #238636;
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            margin-left: 8px;
+        }
+
+        .updated { font-size: 0.8rem; color: #8b949e; margin-top: 4px; }
+
+        .powered {font-size: 0.8rem; color: #8b949e; }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .coin-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .coin-symbol { font-size: 1rem; font-weight: 700; }
+        .coin-name { font-size: 0.75rem; color: #8b949e; }
+        .coin-price { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .coin-change { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.75rem; }
+        .coin-meta { font-size: 0.75rem; color: #8b949e; line-height: 1.6; }
+
+        .change-up { color: #00C48C; }
+        .change-down { color: #FF4D4D; }
+
+        .charts { display: grid; gap: 1.5rem; }
+
+        .chart-card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .chart-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+
+        footer a { color: #58a6ff; text-decoration: none; }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Crypto Pipeline Dashboard <span class="badge">LIVE</span></h1>
+        <p class="updated">Last updated: {{UPDATED_AT}}</p>
+    </div>
+    <p class="powered">Powered by AWS Lambda · Kinesis · S3 · Athena</p>
+</header>
+
+<div class="cards" id="cards"></div>
+
+<div class="charts">
+    <div class="chart-card">
+        <div class="chart-title">Price History</div>
+        <div id="chart-history"></div>
+    </div>
+    <div class="grid-2">
+        <div class="chart-card">
+            <div class="chart-title">Market Cap</div>
+            <div id="chart-mcap"></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">24h Change %</div>
+            <div id="chart-change"></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>Built with AWS Serverless ·
+        <a href="https://github.com/Isma-L154/Serverless-Crypto-Pipeline"
+           target="_blank">View on GitHub</a>
+    </p>
+</footer>
+
+<script>
+    // Data injected by Lambda at build time
+    const cardsData = {{CARDS_DATA}};
+    const chartHistory = {{CHART_HISTORY}};
+    const chartMcap = {{CHART_MCAP}};
+    const chartChange = {{CHART_CHANGE}};
+
+    // Render metric cards
+    const cardsContainer = document.getElementById("cards");
+    cardsData.forEach(coin => {
+        const arrow = coin.change_direction === "up" ? "▲" : "▼";
+        const changeClass = coin.change_direction === "up" ? "change-up" : "change-down";
+        cardsContainer.innerHTML += `
+            <div class="card">
+                <div class="coin-header">
+                    <span class="coin-symbol" style="color:${coin.color}">${coin.symbol}</span>
+                    <span class="coin-name">${coin.name}</span>
+                </div>
+                <div class="coin-price">${coin.price}</div>
+                <div class="coin-change ${changeClass}">
+                    ${arrow} ${coin.change} (24h)
+                </div>
+                <div class="coin-meta">
+                    MCap: ${coin.market_cap}<br>
+                    Vol: ${coin.volume}
+                </div>
+            </div>`;
+    });
+
+    // Render charts
+    const config = { responsive: true };
+    Plotly.newPlot("chart-history", chartHistory.data, chartHistory.layout, config);
+    Plotly.newPlot("chart-mcap", chartMcap.data, chartMcap.layout, config);
+    Plotly.newPlot("chart-change", chartChange.data, chartChange.layout, config);
+</script>
+
+</body>
+</html>

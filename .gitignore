@@ -13,6 +13,9 @@ terraform.tfvars
 # AWS
 .aws/
 
+# Lambda packages
+lambda/**/package/
+lambda/**/*.zip
 
 # C extensions
 *.so
