@@ -7,6 +7,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = { # Used for generating the random suffix for the S3 bucket name, so i can avoid naming conflicts since S3 bucket names must be globally unique
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 provider "aws" {

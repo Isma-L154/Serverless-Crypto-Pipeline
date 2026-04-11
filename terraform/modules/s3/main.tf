@@ -39,6 +39,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "crypto_data" {
     id     = "expire-old-data"
     status = "Enabled"
 
+    filter {}
+
     expiration {
       days = 90
     }
