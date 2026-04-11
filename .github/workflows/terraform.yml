@@ -32,15 +32,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create terraform.tfvars
-        working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          cat > terraform.tfvars << 'EOF'
-          aws_region   = "us-east-1"
-          environment  = "dev"
-          project_name = "crypto-pipeline"
-          EOF
-
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -68,6 +59,15 @@ jobs:
             --python-version 3.11 \
             --only-binary=:all: \
             --quiet
+
+      - name: Create terraform.tfvars
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          cat > terraform.tfvars << 'EOF'
+          aws_region   = "us-east-1"
+          environment  = "dev"
+          project_name = "crypto-pipeline"
+          EOF
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
@@ -78,11 +78,8 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        id: plan
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          terraform plan -no-color -out=tfplan 2>&1 | tee plan_output.txt
-          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        run: terraform plan -no-color 2>&1 | tee plan_output.txt
 
       - name: Comment Plan on PR
         if: github.event_name == 'pull_request'
@@ -92,18 +89,18 @@ jobs:
             const fs = require('fs');
             const plan = fs.readFileSync('${{ env.WORKING_DIR }}/plan_output.txt', 'utf8');
             const truncated = plan.length > 60000 ? plan.substring(0, 60000) + '\n... (truncated)' : plan;
-            
+
             const body = `## Terraform Plan
-            
+
             <details>
             <summary>Click to expand plan output</summary>
-            
+
             \`\`\`hcl
             ${truncated}
             \`\`\`
-            
+
             </details>
-            
+
             **Triggered by:** @${{ github.actor }}
             **Commit:** \`${{ github.sha }}\``;
 
@@ -113,72 +110,3 @@ jobs:
               repo: context.repo.repo,
               body: body
             });
-
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: ${{ env.WORKING_DIR }}/tfplan
-          retention-days: 5
-
-  terraform-apply:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    needs: terraform-plan
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create terraform.tfvars
-        working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          cat > terraform.tfvars << 'EOF'
-          aws_region   = "us-east-1"
-          environment  = "dev"
-          project_name = "crypto-pipeline"
-          EOF
-
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Cache Terraform providers
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.WORKING_DIR }}/.terraform
-          key: terraform-${{ hashFiles('terraform/.terraform.lock.hcl') }}
-          restore-keys: terraform-
-
-      - name: Install Lambda layer dependencies
-        run: |
-          pip install plotly pyathena numpy requests \
-            --target lambda/layers/dependencies/python \
-            --platform manylinux2014_x86_64 \
-            --implementation cp \
-            --python-version 3.11 \
-            --only-binary=:all: \
-            --quiet
-
-      - name: Terraform Init
-        working-directory: ${{ env.WORKING_DIR }}
-        run: terraform init
-
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: ${{ env.WORKING_DIR }}
-
-      - name: Terraform Apply
-        working-directory: ${{ env.WORKING_DIR }}
-        run: terraform apply -auto-approve tfplan
