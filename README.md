@@ -36,9 +36,7 @@ Every 5 minutes, a Lambda function fetches price, market cap, volume, and 24h ch
 - **Visualization** — Plotly
 - **AWS services** — Lambda, Kinesis Firehose, S3, Glue, Athena, CloudFront, EventBridge, IAM, CloudWatch
 
----
-
-## Project structure
+```text
 Serverless-Crypto-Pipeline/
 ├── terraform/
 │   ├── main.tf                 # Module orchestration
@@ -62,9 +60,8 @@ Serverless-Crypto-Pipeline/
 │   └── layers/
 │       └── dependencies/       # Shared Python dependencies (plotly, pyathena, numpy)
 └── docs/
-└── architecture.png        # Architecture diagram
-
----
+    └── architecture.png        # Architecture diagram
+```
 
 ## What I learned
 
