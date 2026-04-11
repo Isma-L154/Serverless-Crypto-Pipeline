@@ -1,3 +1,4 @@
+# This file defines the Terraform configuration for the AWS provider and sets default tags for all AWS resources created by this provider.
 terraform {
   required_version = ">= 1.5"
 
@@ -8,7 +9,6 @@ terraform {
     }
   }
 }
-#Default tags for all AWS resources created by this provider
 provider "aws" {
   region = var.aws_region
 
