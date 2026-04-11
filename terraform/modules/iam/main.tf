@@ -76,3 +76,57 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 # ---------- -------------------- ---------------------- ----------
+
+# IAM Role that Glue will assume to access S3 and write to the Data Catalog
+resource "aws_iam_role" "glue_role" {
+  name = "${var.project_name}-${var.environment}-glue-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "glue.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+# Policy for the IAM Role to allow Glue to read from S3 and write to the Data Catalog
+resource "aws_iam_role_policy" "glue_policy" {
+  name = "${var.project_name}-${var.environment}-glue-policy"
+  role = aws_iam_role.glue_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ]
+        Resource = [
+          var.s3_bucket_arn,
+          "${var.s3_bucket_arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+# ---------- -------------------- ---------------------- ----------

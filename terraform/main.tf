@@ -36,3 +36,13 @@ module "lambda" {
   lambda_role_arn      = module.iam.lambda_role_arn
   firehose_stream_name = module.kinesis.firehose_stream_name
 }
+
+# Call the Glue module to create a Glue crawler that catalogs the data in the S3 bucket
+module "glue" {
+  source = "./modules/glue"
+
+  project_name   = var.project_name
+  environment    = var.environment
+  s3_bucket_name = module.s3.bucket_name
+  glue_role_arn  = module.iam.glue_role_arn
+}
