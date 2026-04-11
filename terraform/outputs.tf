@@ -8,3 +8,7 @@ output "dashboard_bucket" {
   description = "Name of the dashboard S3 bucket"
   value       = module.s3.dashboard_bucket_name
 }
+output "cloudfront_url" {
+  description = "Public CloudFront URL of the dashboard"
+  value       = module.cloudfront.cloudfront_url
+}

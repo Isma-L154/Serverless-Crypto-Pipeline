@@ -52,3 +52,13 @@ module "glue" {
   s3_bucket_name = module.s3.bucket_name
   glue_role_arn  = module.iam.glue_role_arn
 }
+
+# Call the CloudFront module to create a CloudFront distribution that serves the dashboard from the S3 bucket
+module "cloudfront" {
+  source = "./modules/cloudfront"
+
+  project_name                     = var.project_name
+  environment                      = var.environment
+  dashboard_bucket_name            = module.s3.dashboard_bucket_name
+  dashboard_bucket_regional_domain = module.s3.dashboard_bucket_regional_domain
+}

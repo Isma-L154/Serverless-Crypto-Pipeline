@@ -30,10 +30,19 @@ def query_athena(query: str) -> list[dict]:
 def get_latest_prices() -> list[dict]:
     """Get the most recent price for each coin."""
     return query_athena("""
-        SELECT coin_id, price_usd, market_cap_usd,
-               volume_24h_usd, change_24h_pct, timestamp
+        SELECT
+            coin_id,
+            price_usd,
+            market_cap_usd,
+            volume_24h_usd,
+            change_24h_pct,
+            timestamp
         FROM crypto
-        WHERE timestamp = (SELECT MAX(timestamp) FROM crypto)
+        WHERE (coin_id, timestamp) IN (
+            SELECT coin_id, MAX(timestamp)
+            FROM crypto
+            GROUP BY coin_id
+        )
         ORDER BY market_cap_usd DESC
     """)
 

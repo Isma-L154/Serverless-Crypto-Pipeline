@@ -36,3 +36,7 @@ output "athena_results_bucket_arn" {
   description = "ARN of the Athena results bucket"
   value       = aws_s3_bucket.athena_results.arn
 }
+output "dashboard_bucket_regional_domain" {
+  description = "Regional domain name of the dashboard bucket"
+  value       = aws_s3_bucket.dashboard.bucket_regional_domain_name
+}
