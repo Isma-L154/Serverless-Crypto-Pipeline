@@ -16,8 +16,8 @@ resource "aws_glue_crawler" "crypto_crawler" {
     path = "s3://${var.s3_bucket_name}/crypto/"
   }
 
-  # How often the crawler runs (I put it to run every 5 minutes)
-  schedule = "cron(0/5 * * * ? *)"
+  # How often the crawler runs (I put it to run every hour, so its cheaper)
+  schedule = "cron(0 * * * ? *)"
 
   # Automatically detect partition changes
   configuration = jsonencode({

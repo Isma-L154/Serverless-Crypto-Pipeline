@@ -7,6 +7,11 @@ resource "aws_s3_bucket" "crypto_data" {
   }
 }
 
+# Secondary bucket for Athena query results
+resource "aws_s3_bucket" "athena_results" {
+  bucket = "${var.project_name}-${var.environment}-athena-results-${random_id.suffix.hex}"
+}
+
 # Random suffix to ensure bucket name is globally unique
 resource "random_id" "suffix" {
   byte_length = 4
@@ -15,6 +20,16 @@ resource "random_id" "suffix" {
 # Block all public access to the bucket(Is not a Static Web jeje)
 resource "aws_s3_bucket_public_access_block" "crypto_data" {
   bucket = aws_s3_bucket.crypto_data.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Block public access to the Athena results bucket, the same way as the main bucket
+resource "aws_s3_bucket_public_access_block" "athena_results" {
+  bucket = aws_s3_bucket.athena_results.id
 
   block_public_acls       = true
   block_public_policy     = true
