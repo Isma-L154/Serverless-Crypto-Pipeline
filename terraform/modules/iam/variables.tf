@@ -12,3 +12,12 @@ variable "s3_bucket_arn" {
   description = "ARN of the S3 bucket where Firehose will write"
   type        = string
 }
+variable "s3_athena_results_arn" {
+  description = "ARN of the Athena results S3 bucket"
+  type        = string
+}
+
+variable "s3_dashboard_arn" {
+  description = "ARN of the dashboard S3 bucket"
+  type        = string
+}

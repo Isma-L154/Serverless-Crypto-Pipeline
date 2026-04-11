@@ -2,9 +2,11 @@
 module "iam" {
   source = "./modules/iam"
 
-  project_name  = var.project_name
-  environment   = var.environment
-  s3_bucket_arn = module.s3.bucket_arn
+  project_name          = var.project_name
+  environment           = var.environment
+  s3_bucket_arn         = module.s3.bucket_arn
+  s3_athena_results_arn = module.s3.athena_results_bucket_arn
+  s3_dashboard_arn      = module.s3.dashboard_bucket_arn
 }
 
 # Call the S3 module to create an S3 bucket for storing crypto data

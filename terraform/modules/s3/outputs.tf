@@ -32,3 +32,7 @@ output "dashboard_url" {
   description = "Public URL of the dashboard"
   value       = "http://${aws_s3_bucket_website_configuration.dashboard.website_endpoint}"
 }
+output "athena_results_bucket_arn" {
+  description = "ARN of the Athena results bucket"
+  value       = aws_s3_bucket.athena_results.arn
+}

@@ -50,7 +50,6 @@ resource "aws_iam_role" "lambda_role" {
     }]
   })
 }
-# Policy for the IAM Role to allow Lambda to read from Kinesis
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.project_name}-${var.environment}-lambda-policy"
   role = aws_iam_role.lambda_role.id
@@ -70,6 +69,44 @@ resource "aws_iam_role_policy" "lambda_policy" {
       {
         Effect   = "Allow"
         Action   = ["firehose:PutRecord", "firehose:PutRecordBatch"]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:StopQueryExecution",
+          "athena:GetWorkGroup"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ]
+        Resource = [
+          var.s3_bucket_arn,
+          "${var.s3_bucket_arn}/*",
+          var.s3_athena_results_arn,
+          "${var.s3_athena_results_arn}/*",
+          var.s3_dashboard_arn,
+          "${var.s3_dashboard_arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:GetTable",
+          "glue:GetDatabase",
+          "glue:GetPartitions"
+        ]
         Resource = "*"
       }
     ]
