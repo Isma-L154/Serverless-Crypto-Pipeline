@@ -1,0 +1,3 @@
+# Test-only. The function itself needs no packaged dependencies: it uses the
+# standard library plus boto3, which the Lambda Python runtime already provides.
+pytest==9.1.1
