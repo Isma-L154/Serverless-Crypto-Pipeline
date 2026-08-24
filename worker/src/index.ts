@@ -1,3 +1,4 @@
+import { handleRequest } from './api';
 import { fetchMarketData, toRecords } from './coingecko';
 import { insertRecords, purgeOlderThan, RETENTION_SECONDS } from './db';
 
@@ -33,6 +34,10 @@ async function collect(env: Env): Promise<void> {
 export default {
   async scheduled(_controller, env, _ctx): Promise<void> {
     await collect(env);
+  },
+
+  async fetch(request, env, _ctx): Promise<Response> {
+    return handleRequest(request, env.DB);
   },
 } satisfies ExportedHandler<Env>;
 

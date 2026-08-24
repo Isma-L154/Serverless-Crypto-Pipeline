@@ -64,3 +64,72 @@ export async function purgeOlderThan(
 
   return result.meta.changes ?? 0;
 }
+
+/** One coin's most recent observation, as served to the dashboard. */
+export interface LatestRow {
+  coin_id: string;
+  ts: number;
+  price_usd: number;
+  market_cap_usd: number | null;
+  volume_24h_usd: number | null;
+  change_24h_pct: number | null;
+}
+
+/** A single point on the price chart. */
+export interface HistoryRow {
+  coin_id: string;
+  ts: number;
+  price_usd: number;
+}
+
+/**
+ * The newest observation for each coin, ordered by market capitalisation so
+ * the dashboard can render cards without sorting them itself.
+ *
+ * The subquery finds each coin's latest timestamp and the join pulls the
+ * matching row; both halves are served by the primary key, which leads on
+ * coin_id.
+ */
+export async function selectLatest(db: D1Database): Promise<LatestRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT p.coin_id, p.ts, p.price_usd, p.market_cap_usd,
+              p.volume_24h_usd, p.change_24h_pct
+         FROM prices AS p
+         JOIN (
+           SELECT coin_id, MAX(ts) AS ts
+             FROM prices
+            GROUP BY coin_id
+         ) AS newest
+           ON newest.coin_id = p.coin_id
+          AND newest.ts = p.ts
+        ORDER BY p.market_cap_usd DESC NULLS LAST, p.coin_id ASC`,
+    )
+    .all<LatestRow>();
+
+  return results;
+}
+
+/**
+ * Price points from the cutoff onward, oldest first.
+ *
+ * Only the columns the chart draws are selected. Market cap and volume would
+ * roughly triple the payload for data the chart never reads, and this response
+ * is refetched on an interval by every open tab.
+ */
+export async function selectHistorySince(
+  db: D1Database,
+  cutoff: number,
+): Promise<HistoryRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT coin_id, ts, price_usd
+         FROM prices
+        WHERE ts >= ?
+        ORDER BY ts ASC, coin_id ASC`,
+    )
+    .bind(cutoff)
+    .all<HistoryRow>();
+
+  return results;
+}
