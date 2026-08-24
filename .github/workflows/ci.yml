@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Read-only by default. No job here needs to write to the repository, and a
+# workflow on a public repository should not hold permissions it cannot use.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker:
+    name: Worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+
+    steps:
+      # Actions are pinned to a commit SHA rather than a tag. A tag can be
+      # moved to point at different code; a SHA cannot. Dependabot raises these
+      # pins when the upstream action releases.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+  archiver:
+    name: Archiver
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/lambda/archiver
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Install test dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: pytest -q
+
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          # Pinned so CI cannot start failing because a new Terraform release
+          # changed formatting rules. Matches the version used locally.
+          terraform_version: 1.14.8
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive -diff
+
+      # No credentials are configured, so this validates the configuration
+      # without contacting either provider. A plan would need real access and
+      # is deliberately left to a human running it locally.
+      - name: Initialise without a backend
+        run: terraform init -backend=false -input=false
+
+      - name: Validate
+        run: terraform validate -no-color
