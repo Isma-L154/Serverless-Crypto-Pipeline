@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crypto Market Dashboard</title>
+    <meta
+      name="description"
+      content="Live cryptocurrency prices, collected every five minutes."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A0E14'/><path d='M7 21l5-6 4 4 3-4 6 5' stroke='%23F59E0B' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    />
+
+    <style>
+      :root {
+        --bg: #0a0e14;
+        --surface: #111820;
+        --surface-raised: #161f2a;
+        --border: #1e2a38;
+        --border-strong: #2b3a4d;
+        --text: #e6edf3;
+        --muted: #8b98a9;
+        --accent: #f59e0b;
+        --up: #26d07c;
+        --down: #ff5c5c;
+
+        --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
+          Consolas, monospace;
+        --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+        --radius: 10px;
+        --gap: 16px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* A single visible focus treatment, so keyboard users can always see
+         where they are without each component inventing its own. */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px 20px 56px;
+      }
+
+      /* ---------- header ---------- */
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      h1 .mark {
+        color: var(--accent);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex-shrink: 0;
+      }
+
+      .status[data-state='live'] .dot {
+        background: var(--up);
+        box-shadow: 0 0 8px rgb(38 208 124 / 0.7);
+      }
+
+      .status[data-state='error'] .dot {
+        background: var(--down);
+        box-shadow: 0 0 8px rgb(255 92 92 / 0.7);
+      }
+
+      /* ---------- cards ---------- */
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: var(--gap);
+        margin: 24px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 200ms ease, background-color 200ms ease;
+      }
+
+      /* The coin's colour reads as a stripe rather than as text, which keeps
+         every label at full contrast against the dark surface. */
+      .card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--coin, var(--accent));
+      }
+
+      .card:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-raised);
+      }
+
+      .card-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .symbol {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--coin, var(--text));
+      }
+
+      .name {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      .price {
+        font-family: var(--mono);
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 10px 0 6px;
+        /* Keeps digits from shifting width as the price ticks. */
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      .change {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .change[data-dir='up'] {
+        color: var(--up);
+      }
+
+      .change[data-dir='down'] {
+        color: var(--down);
+      }
+
+      .change[data-dir='flat'] {
+        color: var(--muted);
+      }
+
+      /* Direction is carried by an arrow as well as by colour, so the reading
+         does not depend on distinguishing red from green. */
+      .change svg {
+        width: 11px;
+        height: 11px;
+      }
+
+      .spark {
+        display: block;
+        width: 100%;
+        height: 34px;
+        margin-top: 12px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 12px;
+        margin: 14px 0 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+        font-size: 0.72rem;
+      }
+
+      .stats dt {
+        color: var(--muted);
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 0.66rem;
+      }
+
+      .stats dd {
+        margin: 0;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---------- chart ---------- */
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+      }
+
+      .panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .hint {
+        margin: 0 0 14px;
+        font-size: 0.76rem;
+        color: var(--muted);
+        max-width: 62ch;
+      }
+
+      .ranges {
+        display: flex;
+        gap: 4px;
+      }
+
+      .ranges button {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--muted);
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 11px;
+        cursor: pointer;
+        transition: color 200ms ease, border-color 200ms ease,
+          background-color 200ms ease;
+      }
+
+      .ranges button:hover {
+        color: var(--text);
+        border-color: var(--border-strong);
+      }
+
+      .ranges button[aria-pressed='true'] {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .chart {
+        display: block;
+        width: 100%;
+        height: 300px;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+      }
+
+      .legend li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+
+      .swatch {
+        width: 10px;
+        height: 3px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+
+      /* ---------- states ---------- */
+
+      .note {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .note[data-tone='error'] {
+        color: var(--down);
+      }
+
+      /* Reserves the final height up front so arriving data does not push the
+         page around. */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          var(--surface) 25%,
+          var(--surface-raised) 37%,
+          var(--surface) 63%
+        );
+        background-size: 400% 100%;
+        animation: shimmer 1.4s ease infinite;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        height: 186px;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0 50%;
+        }
+      }
+
+      footer {
+        margin-top: 28px;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      footer a {
+        color: var(--muted);
+        text-decoration-color: var(--border-strong);
+        text-underline-offset: 3px;
+      }
+
+      footer a:hover {
+        color: var(--text);
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .wrap {
+          padding: 18px 14px 40px;
+        }
+        .chart {
+          height: 230px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><span class="mark">/</span> Crypto Market Dashboard</h1>
+        <p class="status" id="status" data-state="loading">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="status-text">Loading…</span>
+        </p>
+      </header>
+
+      <main>
+        <h2 class="visually-hidden">Current prices</h2>
+        <ul class="cards" id="cards">
+          <li class="skeleton"></li>
+          <li class="skeleton"></li>
+          <li class="skeleton"></li>
+          <li class="skeleton"></li>
+          <li class="skeleton"></li>
+        </ul>
+
+        <section class="panel" aria-labelledby="chart-title">
+          <div class="panel-head">
+            <h2 id="chart-title">Relative performance</h2>
+            <div class="ranges" role="group" aria-label="Chart time range">
+              <button type="button" data-hours="6">6H</button>
+              <button type="button" data-hours="24" aria-pressed="true">
+                24H
+              </button>
+              <button type="button" data-hours="48">48H</button>
+            </div>
+          </div>
+
+          <p class="hint">
+            Each line is percentage change since the start of the window. Prices
+            span four orders of magnitude, so plotting them on a shared axis
+            would flatten everything but Bitcoin into a straight line.
+          </p>
+
+          <!-- No preserveAspectRatio override: the viewBox is sized to the
+               element's real pixel width so axis text renders undistorted. -->
+          <svg
+            class="chart"
+            id="chart"
+            role="img"
+            aria-labelledby="chart-title chart-desc"
+          >
+            <desc id="chart-desc">
+              Line chart comparing the percentage change of each tracked coin.
+            </desc>
+          </svg>
+
+          <ul class="legend" id="legend"></ul>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Prices from
+          <a href="https://www.coingecko.com" rel="noopener noreferrer"
+            >CoinGecko</a
+          >, collected every five minutes. Not financial advice.
+        </p>
+      </footer>
+    </div>
+
+    <script type="module">
+      const COINS = {
+        bitcoin: { symbol: 'BTC', name: 'Bitcoin', color: '#F7931A' },
+        ethereum: { symbol: 'ETH', name: 'Ethereum', color: '#8FA2F5' },
+        solana: { symbol: 'SOL', name: 'Solana', color: '#14F195' },
+        binancecoin: { symbol: 'BNB', name: 'BNB', color: '#F3BA2F' },
+        // Cardano's brand blue is #0033AD, which is close to unreadable on a
+        // dark background. Lightened to keep the legend legible.
+        cardano: { symbol: 'ADA', name: 'Cardano', color: '#4C8DFF' },
+      };
+
+      const REFRESH_MS = 60_000;
+
+      const els = {
+        status: document.getElementById('status'),
+        statusText: document.getElementById('status-text'),
+        cards: document.getElementById('cards'),
+        chart: document.getElementById('chart'),
+        legend: document.getElementById('legend'),
+        ranges: document.querySelectorAll('.ranges button'),
+      };
+
+      let rangeHours = 24;
+      // Kept so the chart can be redrawn on resize without refetching.
+      let lastSeries = new Map();
+
+      /* ---------- formatting ---------- */
+
+      const usd = (value, digits) =>
+        new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        }).format(value);
+
+      function formatPrice(value) {
+        if (value === null || value === undefined) return '—';
+        // Sub-dollar coins need more decimals to say anything at all.
+        if (value >= 1000) return usd(value, 0);
+        if (value >= 1) return usd(value, 2);
+        return usd(value, 4);
+      }
+
+      function formatCompact(value) {
+        if (value === null || value === undefined) return '—';
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          notation: 'compact',
+          maximumFractionDigits: 2,
+        }).format(value);
+      }
+
+      function formatPercent(value) {
+        if (value === null || value === undefined) return '—';
+        return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+      }
+
+      function direction(value) {
+        if (value === null || value === undefined) return 'flat';
+        if (value > 0.005) return 'up';
+        if (value < -0.005) return 'down';
+        return 'flat';
+      }
+
+      const ARROWS = {
+        up: 'M8 3l5 7H3z',
+        down: 'M8 13L3 6h10z',
+        flat: 'M3 7h10v2H3z',
+      };
+
+      function arrow(dir) {
+        return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${ARROWS[dir]}" fill="currentColor"/></svg>`;
+      }
+
+      /* ---------- rendering ---------- */
+
+      function setStatus(state, text) {
+        els.status.dataset.state = state;
+        els.statusText.textContent = text;
+      }
+
+      function renderCards(coins, series) {
+        if (coins.length === 0) {
+          els.cards.innerHTML =
+            '<li class="note">No observations recorded yet. The first collection runs within five minutes.</li>';
+          return;
+        }
+
+        els.cards.innerHTML = coins
+          .map((row) => {
+            const meta = COINS[row.coin_id] ?? {
+              symbol: row.coin_id.toUpperCase(),
+              name: row.coin_id,
+              color: '#8B98A9',
+            };
+            const dir = direction(row.change_24h_pct);
+
+            return `
+              <li class="card" style="--coin:${meta.color}">
+                <div class="card-head">
+                  <span class="symbol">${meta.symbol}</span>
+                  <span class="name">${meta.name}</span>
+                </div>
+                <p class="price">${formatPrice(row.price_usd)}</p>
+                <p class="change" data-dir="${dir}">
+                  ${arrow(dir)}
+                  <span>${formatPercent(row.change_24h_pct)}</span>
+                  <span class="name">24h</span>
+                </p>
+                ${sparkline(series.get(row.coin_id) ?? [], meta.color)}
+                <dl class="stats">
+                  <div><dt>Market cap</dt><dd>${formatCompact(row.market_cap_usd)}</dd></div>
+                  <div><dt>Volume 24h</dt><dd>${formatCompact(row.volume_24h_usd)}</dd></div>
+                </dl>
+              </li>`;
+          })
+          .join('');
+      }
+
+      /* Each sparkline is scaled to its own coin, so it shows that coin's shape
+         rather than its size relative to Bitcoin. */
+      function sparkline(points, color) {
+        if (points.length < 2) return '<div class="spark"></div>';
+
+        const values = points.map((p) => p.price_usd);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const span = max - min || 1;
+        const step = 100 / (points.length - 1);
+
+        const path = values
+          .map((v, i) => `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(2)},${(28 - ((v - min) / span) * 26).toFixed(2)}`)
+          .join(' ');
+
+        return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <path d="${path}" fill="none" stroke="${color}" stroke-width="1.5"
+                  vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+          </svg>`;
+      }
+
+      /* Plots percentage change from each coin's first observation in the
+         window, which is the only way five coins spanning four orders of
+         magnitude can share one axis and still say anything. */
+      function renderChart(series) {
+        lastSeries = series;
+
+        // One SVG unit per CSS pixel. Scaling a fixed viewBox to fit instead
+        // would squash the axis labels horizontally on narrow screens.
+        const box = els.chart.getBoundingClientRect();
+        const width = Math.max(300, Math.round(box.width) || 1000);
+        const height = Math.round(box.height) || 300;
+        const pad = { top: 14, right: 54, bottom: 24, left: 10 };
+
+        const tracks = [];
+        for (const [coinId, points] of series) {
+          if (points.length < 2) continue;
+          const base = points[0].price_usd;
+          if (!base) continue;
+          tracks.push({
+            coinId,
+            color: COINS[coinId]?.color ?? '#8B98A9',
+            values: points.map((p) => ({
+              ts: p.ts,
+              pct: ((p.price_usd - base) / base) * 100,
+            })),
+          });
+        }
+
+        if (tracks.length === 0) {
+          els.chart.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="#8B98A9" font-size="13" font-family="Inter, sans-serif">Not enough history yet</text>`;
+          els.chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
+          els.legend.innerHTML = '';
+          return;
+        }
+
+        const allPct = tracks.flatMap((t) => t.values.map((v) => v.pct));
+        const allTs = tracks.flatMap((t) => t.values.map((v) => v.ts));
+        const minTs = Math.min(...allTs);
+        const maxTs = Math.max(...allTs);
+        // Always include zero, so the baseline the percentages are measured
+        // from is visible on the chart.
+        const rawMin = Math.min(0, ...allPct);
+        const rawMax = Math.max(0, ...allPct);
+        const headroom = (rawMax - rawMin) * 0.1 || 1;
+        const minPct = rawMin - headroom;
+        const maxPct = rawMax + headroom;
+
+        const x = (ts) =>
+          pad.left +
+          ((ts - minTs) / (maxTs - minTs || 1)) *
+            (width - pad.left - pad.right);
+        const y = (pct) =>
+          pad.top +
+          (1 - (pct - minPct) / (maxPct - minPct || 1)) *
+            (height - pad.top - pad.bottom);
+
+        const gridLines = [rawMax, (rawMax + rawMin) / 2, rawMin]
+          .map(
+            (value) => `
+              <line x1="${pad.left}" y1="${y(value)}" x2="${width - pad.right}" y2="${y(value)}"
+                    stroke="#1E2A38" stroke-width="1"/>
+              <text x="${width - pad.right + 8}" y="${y(value) + 4}" fill="#8B98A9"
+                    font-size="11" font-family="'JetBrains Mono', monospace">${formatPercent(value)}</text>`,
+          )
+          .join('');
+
+        const zeroLine = `<line x1="${pad.left}" y1="${y(0)}" x2="${width - pad.right}" y2="${y(0)}"
+              stroke="#2B3A4D" stroke-width="1" stroke-dasharray="3 3"/>`;
+
+        const paths = tracks
+          .map((track) => {
+            const d = track.values
+              .map(
+                (v, i) =>
+                  `${i === 0 ? 'M' : 'L'}${x(v.ts).toFixed(2)},${y(v.pct).toFixed(2)}`,
+              )
+              .join(' ');
+            return `<path d="${d}" fill="none" stroke="${track.color}" stroke-width="1.75"
+                     stroke-linejoin="round" stroke-linecap="round"
+                     vector-effect="non-scaling-stroke"/>`;
+          })
+          .join('');
+
+        // A window wider than half a day needs the date as well. Two bare
+        // clock times a day apart read as though the axis runs backwards.
+        const spansDays = maxTs - minTs > 12 * 3600;
+        const timeLabels = [minTs, maxTs]
+          .map((ts, i) => {
+            const date = new Date(ts * 1000);
+            const clock = date.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const label = spansDays
+              ? `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${clock}`
+              : clock;
+            return `<text x="${i === 0 ? pad.left : width - pad.right}" y="${height - 6}"
+                      text-anchor="${i === 0 ? 'start' : 'end'}" fill="#8B98A9"
+                      font-size="11" font-family="'JetBrains Mono', monospace">${label}</text>`;
+          })
+          .join('');
+
+        els.chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        els.chart.innerHTML = gridLines + zeroLine + paths + timeLabels;
+
+        els.legend.innerHTML = tracks
+          .map((track) => {
+            const last = track.values.at(-1).pct;
+            const meta = COINS[track.coinId];
+            return `<li>
+                <span class="swatch" style="background:${track.color}"></span>
+                <span>${meta?.symbol ?? track.coinId}</span>
+                <span style="color:${last >= 0 ? 'var(--up)' : 'var(--down)'}">${formatPercent(last)}</span>
+              </li>`;
+          })
+          .join('');
+      }
+
+      /* ---------- data ---------- */
+
+      function groupByCoin(points) {
+        const series = new Map();
+        for (const point of points) {
+          if (!series.has(point.coin_id)) series.set(point.coin_id, []);
+          series.get(point.coin_id).push(point);
+        }
+        return series;
+      }
+
+      async function getJSON(path) {
+        const response = await fetch(path, { headers: { accept: 'application/json' } });
+        if (!response.ok) throw new Error(`${path} responded ${response.status}`);
+        return response.json();
+      }
+
+      async function refresh() {
+        try {
+          const [latest, history] = await Promise.all([
+            getJSON('/api/latest'),
+            getJSON(`/api/history?hours=${rangeHours}`),
+          ]);
+
+          const series = groupByCoin(history.points ?? []);
+          renderCards(latest.coins ?? [], series);
+          renderChart(series);
+
+          if (latest.updatedAt) {
+            const when = new Date(latest.updatedAt * 1000);
+            setStatus('live', `Updated ${when.toLocaleTimeString()}`);
+          } else {
+            setStatus('loading', 'Awaiting first collection');
+          }
+        } catch (error) {
+          console.error(error);
+          setStatus('error', 'Connection lost — retrying');
+        }
+      }
+
+      for (const button of els.ranges) {
+        button.addEventListener('click', () => {
+          rangeHours = Number(button.dataset.hours);
+          for (const other of els.ranges) {
+            other.setAttribute(
+              'aria-pressed',
+              String(other === button),
+            );
+          }
+          refresh();
+        });
+      }
+
+      // Polling stops while the tab is hidden and resumes on return, so a
+      // forgotten background tab does not keep calling the API all day.
+      let timer = null;
+
+      function start() {
+        stop();
+        timer = setInterval(refresh, REFRESH_MS);
+      }
+
+      function stop() {
+        if (timer !== null) clearInterval(timer);
+        timer = null;
+      }
+
+      // The chart is drawn at the element's pixel width, so a resize needs a
+      // redraw. Debounced, because resize fires continuously while dragging.
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        if (resizeTimer !== null) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => renderChart(lastSeries), 150);
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stop();
+        } else {
+          refresh();
+          start();
+        }
+      });
+
+      refresh();
+      start();
+    </script>
+  </body>
+</html>

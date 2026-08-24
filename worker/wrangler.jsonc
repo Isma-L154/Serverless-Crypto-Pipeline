@@ -16,6 +16,13 @@
     "crons": ["*/5 * * * *"]
   },
 
+  // The dashboard is served as a static asset rather than rendered per request.
+  // Asset requests never reach the Worker, so serving the page costs no CPU
+  // against the 10 ms the free plan allows; only /api/* invokes the script.
+  "assets": {
+    "directory": "./public"
+  },
+
   "d1_databases": [
     {
       "binding": "DB",
