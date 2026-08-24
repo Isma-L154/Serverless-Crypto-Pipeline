@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+#
+# The account ID is shown on the right-hand side of any Cloudflare dashboard
+# page, or via `wrangler whoami`.
+cloudflare_account_id = "00000000000000000000000000000000"
+
+# Optional, shown with their defaults.
+# project_name = "crypto-pipeline"
+# environment  = "prod"
