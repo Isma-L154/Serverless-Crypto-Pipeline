@@ -1,0 +1,10 @@
+# Normalise line endings so diffs stay clean across platforms
+* text=auto eol=lf
+
+# Shell scripts must keep LF endings to remain executable
+*.sh text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.zip binary
