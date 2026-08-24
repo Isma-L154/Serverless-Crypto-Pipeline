@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # Cloudflare Worker dependencies
+  - package-ecosystem: npm
+    directory: /worker
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      worker-dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # Terraform providers and modules
+  - package-ecosystem: terraform
+    directory: /terraform
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  # GitHub Actions, pinned by SHA and updated here rather than by moving tags
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  # Archiver Lambda dependencies
+  - package-ecosystem: pip
+    directory: /terraform/lambda/archiver
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
