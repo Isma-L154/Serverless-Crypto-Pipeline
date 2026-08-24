@@ -1,75 +1,174 @@
 # Serverless Crypto Pipeline
 
-A production-grade, serverless data pipeline that ingests real-time cryptocurrency data from the CoinGecko API, processes it through AWS managed services, and visualizes it in a live public dashboard.
+A cryptocurrency market dashboard built across two clouds, managed with Terraform, and running at no cost.
 
-**Live Dashboard →** https://d4us3u1bm2l9r.cloudfront.net/
-
-![Architecture](docs/architecture.png)
+**Live dashboard →** https://crypto.cloudils.com
 
 ---
 
 ## What it does
 
-Every 5 minutes, a Lambda function fetches price, market cap, volume, and 24h change data for Bitcoin, Ethereum, Solana, BNB, and Cardano. The data flows through Kinesis Firehose into S3, where it gets catalogued by AWS Glue and queried with Athena. Every hour, a second Lambda generates an interactive HTML dashboard and deploys it to CloudFront.
+Every five minutes a Cloudflare Worker fetches price, market cap, volume and 24-hour change for Bitcoin, Ethereum, Solana, BNB and Cardano, and writes them to D1. The same Worker serves the dashboard and a small JSON API. Once a day an AWS Lambda reads that window and condenses each day into a permanent record in DynamoDB.
 
----
+```mermaid
+flowchart LR
+    CG[CoinGecko API]
 
-## Architecture
+    subgraph CF["Cloudflare · hot tier"]
+        direction TB
+        CRON["Worker<br/>cron · every 5 min"]
+        D1[("D1<br/>rolling 48h")]
+        API["Worker<br/>fetch handler"]
+        PAGE["Static assets<br/>dashboard"]
+    end
 
-| Layer | Service | Role |
-|---|---|---|
-| Ingestion | Lambda + EventBridge | Fetches crypto data every 5 minutes |
-| Streaming | Kinesis Firehose | Buffers and delivers data to S3 |
-| Storage | S3 | Stores data partitioned by year/month/day/hour |
-| Catalog | AWS Glue | Crawls S3 and maintains schema in Data Catalog |
-| Query | Amazon Athena | Runs SQL queries directly on S3 data |
-| Visualization | Lambda + CloudFront | Generates and serves the live dashboard |
-| IaC | Terraform | All infrastructure managed as code |
+    subgraph AWS["AWS · cold tier"]
+        direction TB
+        SCH["EventBridge Scheduler<br/>daily"]
+        LAM["Lambda<br/>archiver"]
+        DDB[("DynamoDB<br/>daily records")]
+    end
 
----
+    USER([Browser])
 
-## Tech stack
-
-- **Runtime** — Python 3.11 / 3.12
-- **IaC** — Terraform >= 1.5
-- **Data source** — CoinGecko API (free, no API key required)
-- **Visualization** — Plotly
-- **AWS services** — Lambda, Kinesis Firehose, S3, Glue, Athena, CloudFront, EventBridge, IAM, CloudWatch
-
-```text
-Serverless-Crypto-Pipeline/
-├── terraform/
-│   ├── main.tf                 # Module orchestration
-│   ├── providers.tf            # AWS + random providers
-│   ├── variables.tf            # Input variables
-│   ├── outputs.tf              # CloudFront URL and bucket names
-│   └── modules/
-│       ├── s3/                 # Data, Athena results, and dashboard buckets
-│       ├── iam/                # Roles and policies for all services
-│       ├── kinesis/            # Firehose delivery stream
-│       ├── lambda/             # Producer and dashboard functions + shared layer
-│       ├── glue/               # Crawler and Data Catalog database
-│       └── cloudfront/         # CDN distribution for the dashboard
-├── lambda/
-│   ├── producer/               # Fetches crypto data → Firehose
-│   │   └── handler.py
-│   ├── dashboard/              # Queries Athena → generates HTML → uploads to S3
-│   │   ├── handler.py
-│   │   ├── utils.py
-│   │   └── template.html
-│   └── layers/
-│       └── dependencies/       # Shared Python dependencies (plotly, pyathena, numpy)
-└── docs/
-    └── architecture.png        # Architecture diagram
+    CG -->|"every 5 min"| CRON
+    CRON -->|"batched insert<br/>+ prune > 48h"| D1
+    D1 --> API
+    API -->|"/api/latest<br/>/api/history"| USER
+    PAGE -->|"crypto.cloudils.com"| USER
+    SCH --> LAM
+    LAM -->|"reads /api/history"| API
+    LAM -->|"one item per coin per day"| DDB
 ```
 
-## What I learned
+## Why it is shaped this way
 
-- Designing event-driven pipelines with AWS managed services
-- Partitioning data in S3 for cost-efficient Athena queries
-- Managing infrastructure as code with Terraform modules
-- Applying least-privilege IAM policies across multiple services
-- Packaging Python Lambda layers for Linux compatibility
-- Deploying serverless dashboards with CloudFront and S3
+The original version of this project ran a seven-service AWS pipeline — Lambda, Kinesis Firehose, S3, Glue, Athena, CloudFront and EventBridge — to move five records every five minutes. It worked, but Firehose and Athena carried most of the cost and nearly all of the operational complexity, for a workload that is a few kilobytes a day.
 
----
+The rebuild splits the problem by how the data is actually used:
+
+**Cloudflare holds hot data.** Prices are read constantly and only recent ones matter to a chart. D1 keeps a rolling 48-hour window and the cron prunes it on every run, so the database stays a few megabytes and queries stay fast.
+
+**AWS holds cold data.** A daily summary is written once and read rarely. DynamoDB stores one small item per coin per day, indefinitely.
+
+Each tier does the thing it is good at, and neither is doing work the other could do more cheaply.
+
+## Cost
+
+Every service sits inside a permanent free allowance. The figures below are the limits each tier stays within, not estimates.
+
+| Service | Free allowance | Actual use |
+|---|---|---|
+| Workers requests | 100,000 / day | ~300 |
+| Workers cron triggers | 5 | 1 |
+| Workers CPU | 10 ms / invocation | static page costs none |
+| D1 storage | 5 GB (500 MB per database) | ~2 MB |
+| Lambda | 1M requests, 400k GB-s / month | ~30 invocations |
+| DynamoDB | 25 GB, 25 RCU, 25 WCU | 1 RCU, 1 WCU, under 1 MB |
+| EventBridge Scheduler | 14M invocations / month | ~30 |
+| CloudWatch Logs | 5 GB / month | kilobytes, 7-day retention |
+
+Three details do the real work here:
+
+- **DynamoDB is provisioned, not on-demand.** The always-free allowance covers 25 read and 25 write capacity units in provisioned mode only. On-demand bills per request from the first one.
+- **The log group is declared in Terraform.** Left alone, Lambda creates it on first invocation with unlimited retention.
+- **The dashboard is a static asset.** Page requests never invoke the Worker, so serving it costs no CPU.
+
+## Design decisions
+
+**The chart plots relative change, not price.** The tracked coins span four orders of magnitude. On a shared linear axis, Cardano is a flat line along the bottom and the chart says nothing about it. Each line is percentage change since the start of the window instead, with a per-coin sparkline on each card for absolute shape.
+
+**No charting library.** The charts are hand-drawn SVG. A library would mean a third-party script and a couple of hundred kilobytes on a public page to draw five polylines.
+
+**Terraform manages infrastructure; Wrangler manages deployment.** Terraform owns resources with a lifecycle independent of any deploy — the database, and everything in AWS. Wrangler owns the Worker script, its bindings, the cron trigger and the custom domain. Splitting it this way keeps the two tools from contending over the same resource.
+
+**Retention runs inside the write.** Pruning shares the collection cron rather than taking a second trigger.
+
+**The archiver writes every complete day in its window.** One extra write per coin makes a missed run self-healing, instead of leaving a permanent gap in the archive.
+
+## Layout
+
+```text
+worker/                       Cloudflare Worker
+  src/
+    coingecko.ts              upstream contract and normalisation
+    db.ts                     D1 queries and retention
+    api.ts                    JSON endpoints
+    index.ts                  cron and fetch handlers
+  public/index.html           the dashboard
+  migrations/                 D1 schema
+  test/                       runs against a real local D1
+
+terraform/
+  main.tf                     module wiring
+  providers.tf                Cloudflare and AWS
+  modules/cloudflare/         D1 database
+  modules/aws-archive/        DynamoDB, Lambda, scheduler, IAM, logs
+  lambda/archiver/            archiver source and tests
+
+.github/workflows/            CI and CodeQL
+```
+
+## Running it locally
+
+The Worker runs entirely offline, against a local D1 instance:
+
+```bash
+cd worker
+npm install
+npm run migrate:local          # build the schema
+npm run dev                    # http://localhost:8787
+```
+
+To check the dashboard with data in it, insert a few rows:
+
+```bash
+npx wrangler d1 execute crypto-pipeline-prod-prices --local \
+  --command "INSERT INTO prices VALUES ('bitcoin', unixepoch(), 77480, 1554879698239, 29950709837, 0.19)"
+```
+
+Tests and typecheck:
+
+```bash
+npm run typecheck
+npm test                       # Worker, against a real local D1
+cd ../terraform/lambda/archiver && pytest    # archiver
+```
+
+## Deploying
+
+Terraform needs a Cloudflare API token with `Account → D1 → Edit` and AWS credentials:
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # add your account ID
+export CLOUDFLARE_API_TOKEN=...
+
+terraform init
+terraform apply
+```
+
+Then point the Worker at the database Terraform created and deploy it:
+
+```bash
+cd ../worker
+# copy the d1_database_id output into wrangler.jsonc
+npm run migrate                # apply the schema remotely
+npm run deploy
+```
+
+## Tech
+
+- **Cloudflare** — Workers, Cron Triggers, D1, Static Assets
+- **AWS** — Lambda, DynamoDB, EventBridge Scheduler, CloudWatch
+- **Terraform** — both clouds in one root module
+- **TypeScript** for the Worker, **Python** for the archiver
+- **CoinGecko** free API, no key required
+
+## Security
+
+No long-lived cloud keys live in this repository. Terraform reads its credentials from the environment, state and variable files are excluded from version control, secret scanning and push protection are enabled, GitHub Actions are pinned by commit SHA, and CodeQL runs on every pull request. See [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)
