@@ -27,8 +27,10 @@
     {
       "binding": "DB",
       "database_name": "crypto-pipeline-prod-prices",
-      // Created by Terraform. Read it from the d1_database_id output.
-      "database_id": "PLACEHOLDER_REPLACED_AFTER_TERRAFORM_APPLY",
+      // Created by Terraform; this is the d1_database_id output. It is an
+      // identifier rather than a credential, and is committed so the Worker
+      // can be deployed from a clean checkout.
+      "database_id": "9084be79-7616-41a5-99df-3afbbbed086a",
       "migrations_dir": "migrations"
     }
   ]
