@@ -16,6 +16,17 @@
     "crons": ["*/5 * * * *"]
   },
 
+  // Binding the hostname here rather than in Terraform keeps deployment
+  // concerns with the deploy tool. A custom domain also creates and maintains
+  // the DNS record, so Terraform managing it too would mean two tools writing
+  // the same record.
+  "routes": [
+    {
+      "pattern": "crypto.cloudils.com",
+      "custom_domain": true
+    }
+  ],
+
   // The dashboard is served as a static asset rather than rendered per request.
   // Asset requests never reach the Worker, so serving the page costs no CPU
   // against the 10 ms the free plan allows; only /api/* invokes the script.
