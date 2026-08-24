@@ -1,0 +1,25 @@
+{
+  "name": "crypto-pipeline-worker",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "migrate": "wrangler d1 migrations apply crypto-pipeline-prod-prices --remote",
+    "migrate:local": "wrangler d1 migrations apply crypto-pipeline-prod-prices --local",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "test": "wrangler types && vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260820.1": true
+  }
+}
