@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "crypto-pipeline",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-23",
+
+  // Logs are the only diagnostics this project has. Without them a failing
+  // cron is invisible, since nothing else reports on a scheduled run.
+  "observability": {
+    "enabled": true
+  },
+
+  // Every five minutes. The free plan allows five cron triggers per account
+  // and this uses one.
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crypto-pipeline-prod-prices",
+      // Created by Terraform. Read it from the d1_database_id output.
+      "database_id": "PLACEHOLDER_REPLACED_AFTER_TERRAFORM_APPLY",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
