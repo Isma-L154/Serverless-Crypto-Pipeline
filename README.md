@@ -8,7 +8,7 @@ A cryptocurrency market dashboard built across two clouds, managed with Terrafor
 
 ## What it does
 
-Every five minutes a Cloudflare Worker fetches price, market cap, volume and 24-hour change for Bitcoin, Ethereum, Solana, BNB and Cardano, and writes them to D1. The same Worker serves the dashboard and a small JSON API. Once a day an AWS Lambda reads that window and condenses each day into a permanent record in DynamoDB.
+Every ten minutes a Cloudflare Worker fetches price, market cap, volume and 24-hour change for Bitcoin, Ethereum, Solana, BNB and Cardano, and writes them to D1. The same Worker serves the dashboard and a small JSON API. Once a day an AWS Lambda reads that window and condenses each day into a permanent record in DynamoDB.
 
 ```mermaid
 flowchart LR
@@ -16,7 +16,7 @@ flowchart LR
 
     subgraph CF["Cloudflare · hot tier"]
         direction TB
-        CRON["Worker<br/>cron · every 5 min"]
+        CRON["Worker<br/>cron · every 10 min"]
         D1[("D1<br/>rolling 48h")]
         API["Worker<br/>fetch handler"]
         PAGE["Static assets<br/>dashboard"]
@@ -31,7 +31,7 @@ flowchart LR
 
     USER([Browser])
 
-    CG -->|"every 5 min"| CRON
+    CG -->|"every 10 min"| CRON
     CRON -->|"batched insert<br/>+ prune > 48h"| D1
     D1 --> API
     API -->|"/api/latest<br/>/api/history"| USER

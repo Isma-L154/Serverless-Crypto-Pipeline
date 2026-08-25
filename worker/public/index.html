@@ -6,7 +6,7 @@
     <title>Crypto Market Dashboard</title>
     <meta
       name="description"
-      content="Live cryptocurrency prices, collected every five minutes."
+      content="Live cryptocurrency prices, collected every ten minutes."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -479,7 +479,7 @@
           Prices from
           <a href="https://www.coingecko.com" rel="noopener noreferrer"
             >CoinGecko</a
-          >, collected every five minutes. Not financial advice.
+          >, collected every ten minutes. Not financial advice.
         </p>
       </footer>
     </div>
@@ -570,7 +570,7 @@
       function renderCards(coins, series) {
         if (coins.length === 0) {
           els.cards.innerHTML =
-            '<li class="note">No observations recorded yet. The first collection runs within five minutes.</li>';
+            '<li class="note">No observations recorded yet. The first collection runs within ten minutes.</li>';
           return;
         }
 

@@ -17,7 +17,7 @@ const MAX_HISTORY_HOURS = RETENTION_SECONDS / 3600;
 /**
  * How long a response may be reused.
  *
- * The cron writes every five minutes, so anything older than that is stale by
+ * The cron writes every ten minutes, so anything older than that is stale by
  * definition. Caching for a minute collapses the polling of several open tabs
  * into far fewer Worker invocations without the dashboard ever showing data a
  * user would notice as out of date.

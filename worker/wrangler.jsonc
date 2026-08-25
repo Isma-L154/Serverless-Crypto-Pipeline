@@ -10,10 +10,13 @@
     "enabled": true
   },
 
-  // Every five minutes. The free plan allows five cron triggers per account
-  // and this uses one.
+  // Every ten minutes rather than five. CoinGecko's free Demo plan allows
+  // 10,000 calls a month; at five-minute polling this would spend roughly 8,800
+  // of them, leaving no headroom for retries or a redeploy. Ten minutes costs
+  // about 4,400 and still yields 288 observations per coin across the retained
+  // window, which is more resolution than the chart can show.
   "triggers": {
-    "crons": ["*/5 * * * *"]
+    "crons": ["*/10 * * * *"]
   },
 
   // Binding the hostname here rather than in Terraform keeps deployment
