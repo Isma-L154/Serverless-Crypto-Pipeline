@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildRequestUrl,
+  fetchMarketData,
   toRecords,
   type CoinGeckoResponse,
 } from '../src/coingecko';
@@ -114,5 +115,48 @@ describe('toRecords', () => {
 
   it('returns nothing for an empty payload', () => {
     expect(toRecords({}, observedAt)).toEqual([]);
+  });
+});
+
+describe('fetchMarketData', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('authenticates with the demo key header', async () => {
+    // Without a key CoinGecko rate limits by source IP, and a Worker's egress
+    // addresses are shared and permanently saturated, so this header is the
+    // difference between the cron working and returning 429 forever.
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(Response.json({ bitcoin: { usd: 1 } }));
+
+    await fetchMarketData('CG-test-key');
+
+    const init = fetchSpy.mock.calls[0]?.[1] as RequestInit;
+    expect(
+      (init.headers as Record<string, string>)['x-cg-demo-api-key'],
+    ).toBe('CG-test-key');
+  });
+
+  it('refuses to call the API without a key', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    await expect(fetchMarketData('')).rejects.toThrow(
+      'COINGECKO_API_TOKEN is not configured',
+    );
+    // Failing before the request is what makes a missing secret diagnosable,
+    // rather than surfacing later as an opaque rate-limit error.
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('reports an unsuccessful response rather than returning empty data', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('rate limited', { status: 429, statusText: 'Too Many Requests' }),
+    );
+
+    await expect(fetchMarketData('CG-test-key')).rejects.toThrow(
+      /CoinGecko responded 429/,
+    );
   });
 });

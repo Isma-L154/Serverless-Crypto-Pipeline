@@ -99,14 +99,27 @@ export function toRecords(
   return records;
 }
 
-/** Fetches current market data, throwing on any response that is not usable. */
+/**
+ * Fetches current market data, throwing on any response that is not usable.
+ *
+ * The API key is required rather than optional. Without one CoinGecko rate
+ * limits by source IP, and a Worker's egress IPs are shared across Cloudflare
+ * and permanently saturated: keyless requests from the edge return 429 on
+ * every attempt, even though the same request succeeds from a laptop.
+ */
 export async function fetchMarketData(
+  apiKey: string,
   ids: readonly string[] = COIN_IDS,
 ): Promise<CoinGeckoResponse> {
+  if (!apiKey) {
+    throw new Error('COINGECKO_API_TOKEN is not configured');
+  }
+
   const response = await fetch(buildRequestUrl(ids), {
     headers: {
       'User-Agent': 'crypto-pipeline/2.0',
       accept: 'application/json',
+      'x-cg-demo-api-key': apiKey,
     },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });

@@ -11,12 +11,12 @@ import { insertRecords, purgeOlderThan, RETENTION_SECONDS } from './db';
  * Failures are allowed to propagate. A thrown error marks the invocation as
  * failed, which is what makes a broken poll visible; swallowing it would leave
  * the dashboard quietly serving stale data. The schedule itself is unaffected,
- * so the next run five minutes later proceeds normally.
+ * so the next run ten minutes later proceeds normally.
  */
 async function collect(env: Env): Promise<void> {
   const observedAt = Math.floor(Date.now() / 1000);
 
-  const payload = await fetchMarketData();
+  const payload = await fetchMarketData(env.COINGECKO_API_TOKEN);
   const records = toRecords(payload, observedAt);
 
   if (records.length === 0) {
