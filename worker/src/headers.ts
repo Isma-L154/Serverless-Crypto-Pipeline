@@ -21,7 +21,11 @@
  */
 const CSP = [
   "default-src 'none'",
-  "script-src 'self'",
+  // Cloudflare injects its Web Analytics beacon into pages it serves. It is
+  // first-party to the platform already hosting this site, so allowing it does
+  // not widen the trust boundary in any real sense — and blocking it only
+  // produced a console error on every page load.
+  "script-src 'self' https://static.cloudflareinsights.com",
   // Google Fonts serves the face declarations from googleapis and the font
   // files themselves from gstatic; both are needed for the page to render.
   "style-src 'self' https://fonts.googleapis.com",
@@ -29,7 +33,8 @@ const CSP = [
   // The favicon is an inline SVG data URI.
   "img-src 'self' data:",
   // The dashboard only ever calls its own /api/* endpoints.
-  "connect-src 'self'",
+  // The dashboard calls its own /api/*; the beacon reports to Cloudflare.
+  "connect-src 'self' https://cloudflareinsights.com",
   "base-uri 'none'",
   "form-action 'none'",
   "frame-ancestors 'none'",
