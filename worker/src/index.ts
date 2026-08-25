@@ -37,7 +37,7 @@ export default {
   },
 
   async fetch(request, env, _ctx): Promise<Response> {
-    return handleRequest(request, env.DB);
+    return handleRequest(request, env.DB, env.API_RATE_LIMITER);
   },
 } satisfies ExportedHandler<Env>;
 

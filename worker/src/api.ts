@@ -7,6 +7,8 @@
  */
 
 import { RETENTION_SECONDS, selectHistorySince, selectLatest } from './db';
+import { withSecurityHeaders } from './headers';
+import { withinLimit } from './ratelimit';
 
 /** Default span of the history endpoint when the caller does not ask for one. */
 const DEFAULT_HISTORY_HOURS = 24;
@@ -87,24 +89,33 @@ export async function handleHistory(
 export async function handleRequest(
   request: Request,
   db: D1Database,
+  limiter?: RateLimit,
 ): Promise<Response> {
   const url = new URL(request.url);
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return errorResponse('Method not allowed', 405);
+    return withSecurityHeaders(errorResponse('Method not allowed', 405));
+  }
+
+  // Checked before the query runs. Rejecting after reading the database would
+  // still spend the row-read allowance this limit exists to protect.
+  if (!(await withinLimit(limiter, request))) {
+    return withSecurityHeaders(
+      errorResponse('Too many requests', 429),
+    );
   }
 
   try {
     switch (url.pathname) {
       case '/api/latest':
-        return await handleLatest(db);
+        return withSecurityHeaders(await handleLatest(db));
       case '/api/history':
-        return await handleHistory(db, url);
+        return withSecurityHeaders(await handleHistory(db, url));
       default:
-        return errorResponse('Not found', 404);
+        return withSecurityHeaders(errorResponse('Not found', 404));
     }
   } catch (cause) {
     console.error('request failed', cause);
-    return errorResponse('Internal error', 500);
+    return withSecurityHeaders(errorResponse('Internal error', 500));
   }
 }
