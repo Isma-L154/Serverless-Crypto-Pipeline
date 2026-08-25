@@ -37,6 +37,25 @@
     "directory": "./public"
   },
 
+  // Caps how hard a single client can hit /api/*. The endpoints are cheap per
+  // call but read real rows: one /api/history reads roughly 2,900 once the
+  // window is full, against 5 million a day on the free plan. Without this, a
+  // few thousand cache-busted requests exhaust the allowance and the dashboard
+  // is down until the daily reset.
+  //
+  // Keyed on client IP in the Worker, not on path, so one abusive caller
+  // cannot lock everyone else out.
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ],
+
   "d1_databases": [
     {
       "binding": "DB",

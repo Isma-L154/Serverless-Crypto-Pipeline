@@ -167,7 +167,15 @@ npm run deploy
 
 ## Security
 
-No long-lived cloud keys live in this repository. Terraform reads its credentials from the environment, state and variable files are excluded from version control, secret scanning and push protection are enabled, GitHub Actions are pinned by commit SHA, and CodeQL runs on every pull request. See [SECURITY.md](SECURITY.md).
+No long-lived cloud keys live in this repository. Terraform reads its credentials from the environment, state and variable files are excluded from version control, secret scanning and push protection are enabled, GitHub Actions are pinned by commit SHA, and CodeQL runs on every pull request.
+
+The public surface is two read-only `GET` endpoints and a static page. There are no accounts, no sessions and no user data, so the controls that matter are the ones protecting availability and the domain's reputation rather than anyone's records:
+
+- **Rate limiting** on `/api/*`, keyed on the client IP. `/api/history` reads a few thousand rows per call against a daily allowance, so an unlimited endpoint is a way to take the dashboard down for a day, not just to make it slow. Cloudflare counts per machine and reconciles asynchronously, so the effective ceiling is looser than the configured number — a 300-request burst measured against production was cut by roughly a quarter.
+- **A strict Content Security Policy** with `default-src 'none'` and no `unsafe-inline`. The stylesheet and script live in their own files specifically so the policy can stay that strict without pinning hashes that break on every edit. Static assets get the same headers through `public/_headers`, since assets are served without invoking the Worker and its code cannot reach them.
+- `frame-ancestors 'none'` and `X-Frame-Options: DENY`, because the realistic abuse of a public price dashboard is embedding it in someone else's page.
+
+See [SECURITY.md](SECURITY.md).
 
 ## License
 

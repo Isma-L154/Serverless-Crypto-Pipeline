@@ -1,0 +1,16 @@
+# Security headers for the static assets.
+#
+# Assets are served without invoking the Worker, so its fetch handler never sees
+# these requests and cannot add headers to them. This file is the only place
+# they can be applied, and it costs no CPU or request quota to do so.
+#
+# The Worker applies the same set to /api/* in src/headers.ts. Keep the two in
+# step: a change here that is not mirrored there leaves the API weaker than the
+# page it serves.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
