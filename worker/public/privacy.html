@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Notice · Crypto Market Dashboard</title>
+    <meta
+      name="description"
+      content="What this dashboard collects, what it does not, and which third parties are involved."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A0E14'/><path d='M7 21l5-6 4 4 3-4 6 5' stroke='%23F59E0B' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+
+  <body>
+    <div class="wrap prose">
+      <nav class="breadcrumb">
+        <a href="/">&larr; Back to the dashboard</a>
+      </nav>
+
+      <h1>Privacy Notice</h1>
+      <p class="meta">Last updated 25 August 2026</p>
+
+      <p class="lede">
+        This is a personal, non-commercial project that displays public
+        cryptocurrency market data. It has no accounts, no sign-up and no
+        contact form, so there is very little to tell — but "very little" is not
+        "nothing", and the parts that are true are set out below.
+      </p>
+
+      <h2>The short version</h2>
+      <ul class="summary">
+        <li><strong>No cookies.</strong> None are set, by this site or anyone else.</li>
+        <li><strong>No accounts.</strong> There is nothing to sign up for.</li>
+        <li><strong>Nothing you type is collected</strong>, because there is nowhere to type.</li>
+        <li><strong>Nothing is sold, shared or used for advertising.</strong></li>
+        <li><strong>No tracking across other websites.</strong></li>
+      </ul>
+
+      <h2>What is processed</h2>
+
+      <h3>Your IP address</h3>
+      <p>
+        Every request to this site carries your IP address, as every request on
+        the web does. It is used for two things:
+      </p>
+      <ul>
+        <li>
+          <strong>Rate limiting.</strong> The data endpoints are capped per
+          visitor so that one automated client cannot exhaust the free database
+          allowance and take the dashboard offline for everyone. Your address is
+          used to count your requests and is not stored by this project.
+        </li>
+        <li>
+          <strong>Serving the page.</strong> Cloudflare, which hosts this site,
+          keeps standard request logs under its own retention policy.
+        </li>
+      </ul>
+      <p>
+        An IP address can identify you indirectly, so it is treated as personal
+        data here even though nothing is kept.
+      </p>
+
+      <h3>Visit measurement</h3>
+      <p>
+        This site uses Cloudflare Web Analytics, which reports aggregate page
+        views. It sets no cookies, does not fingerprint your browser and does not
+        follow you to other sites.
+      </p>
+
+      <h2>Third parties</h2>
+      <p>
+        Only one third party is involved in loading this page, and it is the
+        company already serving it:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Who</th><th>Why</th><th>What they receive</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloudflare</td>
+            <td>Hosting, rate limiting, analytics</td>
+            <td>Your IP address and request details</td>
+          </tr>
+          <tr>
+            <td>CoinGecko</td>
+            <td>Source of the price data</td>
+            <td>
+              Nothing about you. This site fetches prices on a schedule from its
+              own server; your browser never contacts CoinGecko unless you click
+              the link in the footer.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="aside">
+        <strong>Fonts are served from this domain.</strong> The typefaces were
+        originally loaded from Google Fonts, which meant every visitor's IP
+        address reached Google before a single price was drawn. They are now
+        hosted here, so rendering this page involves no request to Google at all.
+      </p>
+
+      <h2>Data this site does store</h2>
+      <p>
+        The database holds cryptocurrency prices and nothing else — coin, price,
+        market capitalisation, volume, and the time each was recorded. There is
+        no column anywhere that describes a person. Recent prices are kept for
+        about two days; a daily summary is kept indefinitely.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        Data protection law gives you rights to access, correct and erase
+        personal data held about you. In practice there is nothing here to act
+        on: this project stores no personal data, so there is no record to
+        retrieve or delete. For the request logs and analytics described above,
+        those are held by Cloudflare under
+        <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer">their privacy policy</a>.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        This site is not directed at children and collects nothing from anyone,
+        regardless of age.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If what the site does changes, this page changes with it and the date at
+        the top is updated. The full history of this page is public in the
+        project's
+        <a href="https://github.com/Isma-L154/Serverless-Crypto-Pipeline" rel="noopener noreferrer">source repository</a>,
+        so any edit can be inspected.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about this notice can be raised as an issue on the
+        <a href="https://github.com/Isma-L154/Serverless-Crypto-Pipeline/issues" rel="noopener noreferrer">project repository</a>.
+      </p>
+
+      <footer>
+        <p>
+          <a href="/">Dashboard</a> · <a href="/terms">Terms of Use</a>
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
