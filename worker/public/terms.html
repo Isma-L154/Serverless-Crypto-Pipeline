@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms of Use · Crypto Market Dashboard</title>
+    <meta
+      name="description"
+      content="Terms covering the use of this dashboard and its public data API."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230A0E14'/><path d='M7 21l5-6 4 4 3-4 6 5' stroke='%23F59E0B' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+
+  <body>
+    <div class="wrap prose">
+      <nav class="breadcrumb">
+        <a href="/">&larr; Back to the dashboard</a>
+      </nav>
+
+      <h1>Terms of Use</h1>
+      <p class="meta">Last updated 25 August 2026</p>
+
+      <div class="callout">
+        <h2>This is not financial advice</h2>
+        <p>
+          Nothing on this site is investment, financial, trading, legal or tax
+          advice, and nothing here is a recommendation to buy, sell or hold any
+          asset. It is a personal project that displays public market data.
+        </p>
+        <p>
+          Cryptocurrency prices are volatile and you can lose money. Any decision
+          you make after looking at this dashboard is yours alone. Do your own
+          research and speak to a qualified adviser before risking anything you
+          are not prepared to lose.
+        </p>
+      </div>
+
+      <h2>The data may be wrong, late or missing</h2>
+      <p>
+        Prices come from a third-party API and are refreshed roughly every ten
+        minutes. The figures shown are whatever that source last returned, not a
+        verified market price, and they can be stale, inaccurate or absent
+        entirely if the upstream service is unavailable.
+      </p>
+      <p>
+        The 24-hour change, market capitalisation and volume figures are supplied
+        by the same source and are not independently checked. Do not treat any
+        number here as authoritative, and do not rely on it for trading.
+      </p>
+
+      <h2>No guarantee that the site works</h2>
+      <p>
+        This runs on free infrastructure as a personal project. It may be slow,
+        broken, or switched off without notice, and there is no service level of
+        any kind. It is provided "as is", without warranties of any kind, express
+        or implied. To the fullest extent the law allows, no liability is
+        accepted for any loss arising from using it or from being unable to.
+      </p>
+
+      <h2>The public API</h2>
+      <p>
+        The endpoints under <code>/api/</code> are readable by anyone and are
+        offered as a convenience, with conditions:
+      </p>
+      <ul>
+        <li>They are rate limited per client. Automated clients that exceed the
+          limit receive an HTTP 429 response.</li>
+        <li>They are unsupported and may change shape or disappear at any time,
+          without notice or versioning.</li>
+        <li>Do not build anything you depend on top of them.</li>
+        <li>Do not attempt to circumvent the rate limit, or to disrupt the
+          service for others.</li>
+      </ul>
+
+      <h2>Data attribution</h2>
+      <p>
+        Market data on this site is
+        <strong>provided by
+          <a href="https://www.coingecko.com" rel="noopener noreferrer">CoinGecko</a></strong>,
+        used under their free Demo plan. CoinGecko is the owner of that data and
+        their own terms govern it. If you reuse anything you obtain through this
+        site's API, that attribution travels with it and remains your
+        responsibility.
+      </p>
+
+      <h2>The code</h2>
+      <p>
+        The source is public under the MIT licence and can be read, copied and
+        modified on those terms. That licence covers the software only; it does
+        not grant any right over the market data described above.
+      </p>
+      <p>
+        The typefaces bundled with this site are licensed separately under the
+        SIL Open Font License 1.1.
+      </p>
+
+      <h2>Privacy</h2>
+      <p>
+        What this site does and does not collect is described in the
+        <a href="/privacy">Privacy Notice</a>.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        These terms may change, and the date at the top will say when they last
+        did. Every revision is visible in the project's public
+        <a href="https://github.com/Isma-L154/Serverless-Crypto-Pipeline" rel="noopener noreferrer">source repository</a>.
+      </p>
+
+      <footer>
+        <p>
+          <a href="/">Dashboard</a> · <a href="/privacy">Privacy Notice</a>
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

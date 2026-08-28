@@ -26,10 +26,11 @@ const CSP = [
   // not widen the trust boundary in any real sense — and blocking it only
   // produced a console error on every page load.
   "script-src 'self' https://static.cloudflareinsights.com",
-  // Google Fonts serves the face declarations from googleapis and the font
-  // files themselves from gstatic; both are needed for the page to render.
-  "style-src 'self' https://fonts.googleapis.com",
-  'font-src https://fonts.gstatic.com',
+  "style-src 'self'",
+  // The fonts are self-hosted, so no third party is involved in rendering the
+  // page at all. Loading them from Google would have sent every visitor's IP
+  // address there before a single price was drawn.
+  "font-src 'self'",
   // The favicon is an inline SVG data URI.
   "img-src 'self' data:",
   // The dashboard only ever calls its own /api/* endpoints.

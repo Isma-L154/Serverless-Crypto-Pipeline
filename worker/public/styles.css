@@ -1,3 +1,29 @@
+/* Self-hosted so no visitor request reaches a third party.
+   Loading these from Google sent every visitor's IP address to Google before a
+   single price was drawn, which is a disclosure the dashboard should not have
+   to make for a cosmetic dependency.
+
+   Both are single variable fonts covering the whole weight range, so the two
+   families cost two requests and about 80 KB rather than six of each.
+
+   Inter and JetBrains Mono are both SIL Open Font License 1.1; see
+   public/fonts/LICENSE.md. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-variable.woff2') format('woff2');
+}
+
 :root {
   --bg: #0a0e14;
   --surface: #111820;
@@ -403,4 +429,193 @@ footer a:hover {
   .chart {
     height: 230px;
   }
+}
+
+/* ---------- long-form pages (terms, privacy) ---------- */
+
+/* Narrower than the dashboard: prose is read line by line, so it is capped
+   near 70 characters rather than filling a dashboard-width column. */
+.prose {
+  max-width: 46rem;
+}
+
+.prose .breadcrumb {
+  margin-bottom: 28px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration-color: rgb(245 158 11 / 0.4);
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+.prose h1 {
+  margin: 0 0 6px;
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
+}
+
+.prose .meta {
+  margin: 0 0 28px;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.prose .lede {
+  font-size: 1.02rem;
+  color: var(--text);
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose h2 {
+  margin: 34px 0 10px;
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
+}
+
+.prose h3 {
+  margin: 24px 0 8px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.prose p,
+.prose li {
+  color: #c3cedb;
+}
+
+.prose ul {
+  padding-left: 20px;
+}
+
+.prose li {
+  margin-bottom: 7px;
+}
+
+.prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* The summary list carries the points most people came to check, so it reads
+   as a block rather than as body text. */
+.prose .summary {
+  list-style: none;
+  padding: 16px 18px;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.prose .summary li {
+  margin: 0;
+  padding: 5px 0 5px 22px;
+  position: relative;
+}
+
+.prose .summary li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--up);
+}
+
+/* The financial disclaimer is the one thing on these pages that someone could
+   be harmed by missing, so it is given weight rather than left as a paragraph. */
+.prose .callout {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin: 26px 0;
+}
+
+.prose .callout h2 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.prose .callout p:last-child {
+  margin-bottom: 0;
+}
+
+.prose .aside {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 0.9rem;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.88rem;
+}
+
+.prose th,
+.prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prose td {
+  color: #c3cedb;
+}
+
+.prose > footer {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+/* A table of third parties should not force the page sideways on a phone. */
+@media (max-width: 560px) {
+  .prose table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+.legal-links {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
 }
