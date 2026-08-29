@@ -1,6 +1,6 @@
 # Serverless Crypto Pipeline
 
-A cryptocurrency market dashboard built across two clouds, managed with Terraform, and running at no cost.
+A live dashboard tracking the price, market cap and 24-hour movement of five major cryptocurrencies, updated every ten minutes. Built as a serverless pipeline across Cloudflare and AWS, managed with Terraform, and running entirely within free tiers.
 
 **Live dashboard →** https://crypto.cloudils.com
 
@@ -67,6 +67,7 @@ Every service sits inside a permanent free allowance. The figures below are the 
 | DynamoDB | 25 GB, 25 RCU, 25 WCU | 1 RCU, 1 WCU, under 1 MB |
 | EventBridge Scheduler | 14M invocations / month | ~30 |
 | CloudWatch Logs | 5 GB / month | kilobytes, 7-day retention |
+| CoinGecko Demo API | 10,000 calls / month | ~4,400 |
 
 Three details do the real work here:
 
@@ -82,6 +83,8 @@ Three details do the real work here:
 
 **Terraform manages infrastructure; Wrangler manages deployment.** Terraform owns resources with a lifecycle independent of any deploy — the database, and everything in AWS. Wrangler owns the Worker script, its bindings, the cron trigger and the custom domain. Splitting it this way keeps the two tools from contending over the same resource.
 
+**Ten-minute polling, not five.** The Demo plan allows 10,000 calls a month. Five-minute polling would spend roughly 8,800 of them and leave no headroom for a retry or a redeploy; ten minutes costs about 4,400 and still yields 288 observations per coin across the retained window, which is more resolution than the chart can draw.
+
 **Retention runs inside the write.** Pruning shares the collection cron rather than taking a second trigger.
 
 **The archiver writes every complete day in its window.** One extra write per coin makes a missed run self-healing, instead of leaving a permanent gap in the archive.
@@ -94,14 +97,23 @@ worker/                       Cloudflare Worker
     coingecko.ts              upstream contract and normalisation
     db.ts                     D1 queries and retention
     api.ts                    JSON endpoints
+    headers.ts                security headers for API responses
+    ratelimit.ts              per-IP limit on /api/*
     index.ts                  cron and fetch handlers
-  public/index.html           the dashboard
+  public/
+    index.html                the dashboard
+    app.js                    chart drawing and polling
+    styles.css                the whole stylesheet
+    fonts/                    self-hosted Inter and JetBrains Mono
+    terms.html, privacy.html  legal pages
+    _headers                  the same security headers, for static assets
   migrations/                 D1 schema
   test/                       runs against a real local D1
 
 terraform/
   main.tf                     module wiring
   providers.tf                Cloudflare and AWS
+  variables.tf, outputs.tf    root inputs and outputs
   modules/cloudflare/         D1 database
   modules/aws-archive/        DynamoDB, Lambda, scheduler, IAM, logs
   lambda/archiver/            archiver source and tests
@@ -111,13 +123,20 @@ terraform/
 
 ## Running it locally
 
-The Worker runs entirely offline, against a local D1 instance:
+The dashboard and the API run entirely offline, against a local D1 instance:
 
 ```bash
 cd worker
 npm install
 npm run migrate:local          # build the schema
 npm run dev                    # http://localhost:8787
+```
+
+Only the collection cron needs credentials. To run it locally, put a free [CoinGecko Demo key](https://www.coingecko.com/en/api/pricing) in `.dev.vars` (gitignored) and trigger a scheduled run:
+
+```bash
+echo 'COINGECKO_API_TOKEN=CG-...' > .dev.vars
+curl "http://localhost:8787/cdn-cgi/local/scheduled"
 ```
 
 To check the dashboard with data in it, insert a few rows:
@@ -132,7 +151,14 @@ Tests and typecheck:
 ```bash
 npm run typecheck
 npm test                       # Worker, against a real local D1
-cd ../terraform/lambda/archiver && pytest    # archiver
+```
+
+The archiver is Python and has its own dependencies:
+
+```bash
+cd terraform/lambda/archiver
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Deploying
@@ -153,9 +179,12 @@ Then point the Worker at the database Terraform created and deploy it:
 ```bash
 cd ../worker
 # copy the d1_database_id output into wrangler.jsonc
+npx wrangler secret put COINGECKO_API_TOKEN   # the Demo key
 npm run migrate                # apply the schema remotely
 npm run deploy
 ```
+
+The key is required, not optional. CoinGecko rate limits keyless requests by source IP, and a Worker's egress addresses are shared across Cloudflare and permanently saturated, so an unauthenticated poll returns 429 from the edge on every attempt even though the same request succeeds from a laptop.
 
 ## Tech
 
@@ -163,7 +192,7 @@ npm run deploy
 - **AWS** — Lambda, DynamoDB, EventBridge Scheduler, CloudWatch
 - **Terraform** — both clouds in one root module
 - **TypeScript** for the Worker, **Python** for the archiver
-- **CoinGecko** free API, no key required
+- **CoinGecko** Simple Price API, on the free Demo plan (a key is required)
 
 ## Security
 
