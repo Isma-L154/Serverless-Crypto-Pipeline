@@ -106,7 +106,9 @@ worker/                       Cloudflare Worker
     styles.css                the whole stylesheet
     fonts/                    self-hosted Inter and JetBrains Mono
     terms.html, privacy.html  legal pages
+    og.png                    the social link preview card
     _headers                  the same security headers, for static assets
+  og-card.html                source the card is rendered from, not served
   migrations/                 D1 schema
   test/                       runs against a real local D1
 
