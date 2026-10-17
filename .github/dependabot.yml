@@ -4,6 +4,8 @@ updates:
   # Cloudflare Worker dependencies
   - package-ecosystem: npm
     directory: /worker
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -17,6 +19,8 @@ updates:
   # Terraform providers and modules
   - package-ecosystem: terraform
     directory: /terraform
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
@@ -24,6 +28,8 @@ updates:
   # GitHub Actions, pinned by SHA and updated here rather than by moving tags
   - package-ecosystem: github-actions
     directory: /
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
@@ -37,6 +43,8 @@ updates:
   # Archiver Lambda dependencies
   - package-ecosystem: pip
     directory: /terraform/lambda/archiver
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
