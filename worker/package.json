@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.4",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11",
     "wrangler": "^4.151.1"
   },
