@@ -1,12 +1,17 @@
 # Serverless Crypto Pipeline
 
+![Serverless Crypto Pipeline banner](docs/brand/banner.svg)
+
+[![CI](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/codeql.yml/badge.svg)](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/codeql.yml)
+
 A live dashboard tracking the price, market cap and 24-hour movement of five major cryptocurrencies, updated every ten minutes. Built as a serverless pipeline across Cloudflare and AWS, managed with Terraform, and running entirely within free tiers.
 
 **Live dashboard →** https://crypto.cloudils.com
 
 ---
 
-## What it does
+## How it works
 
 Every ten minutes a Cloudflare Worker fetches price, market cap, volume and 24-hour change for Bitcoin, Ethereum, Solana, BNB and Cardano, and writes them to D1. The same Worker serves the dashboard and a small JSON API. Once a day an AWS Lambda reads that window and condenses each day into a permanent record in DynamoDB.
 

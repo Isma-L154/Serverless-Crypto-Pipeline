@@ -32,6 +32,18 @@ best effort.
 - Missing hardening that has no practical impact on a project with no user data
 - Reports produced by a scanner without evidence that the issue is exploitable here
 
+## Baseline security controls
+
+The project keeps these seven baseline controls in place:
+
+1. **Credentialless source control:** no long-lived cloud credentials are committed.
+2. **Federated deployment auth:** GitHub Actions deploys with OIDC and short-lived AWS role assumptions.
+3. **Least-privilege infrastructure:** IAM permissions are constrained to only the resources this project needs.
+4. **Secret leak prevention:** GitHub secret scanning and push protection are enabled.
+5. **Dependency and supply-chain hygiene:** Dependabot tracks vulnerable dependencies and workflow actions are pinned to commit SHAs.
+6. **Static and dynamic analysis in CI:** CI runs tests and CodeQL scans pull requests for regressions and security issues.
+7. **Runtime abuse controls:** API endpoints are rate-limited and served with strict security headers.
+
 ## How this project protects credentials
 
 - No long-lived cloud keys are stored in the repository. Deployments to AWS
