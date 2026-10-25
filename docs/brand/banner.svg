@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Serverless Crypto Pipeline banner</title>
+  <desc id="desc">Decorative banner with the project name and subtitle.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1020" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="28" fill="url(#bg)" />
+  <path d="M80 230 L250 120 L420 185 L590 90 L760 150 L930 70 L1120 140" fill="none" stroke="url(#accent)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="250" cy="120" r="9" fill="#22d3ee" />
+  <circle cx="420" cy="185" r="9" fill="#22d3ee" />
+  <circle cx="590" cy="90" r="9" fill="#22d3ee" />
+  <circle cx="760" cy="150" r="9" fill="#22d3ee" />
+  <circle cx="930" cy="70" r="9" fill="#22d3ee" />
+  <text x="80" y="120" fill="#f8fafc" font-family="'Inter', 'Segoe UI', sans-serif" font-size="62" font-weight="700">Serverless Crypto Pipeline</text>
+  <text x="80" y="165" fill="#cbd5e1" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28">Cloudflare hot tier + AWS archive, all inside free tiers</text>
+</svg>
