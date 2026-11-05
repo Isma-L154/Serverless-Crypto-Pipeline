@@ -1,0 +1,7 @@
+# Cloudflare prepends its managed content signals to this file at the edge.
+# /api/ stays crawlable on purpose: the dashboard renders its prices from it,
+# so blocking it would leave crawlers an empty page.
+User-agent: *
+Allow: /
+
+Sitemap: https://crypto.cloudils.com/sitemap.xml

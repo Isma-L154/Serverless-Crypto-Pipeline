@@ -8,6 +8,8 @@ import js from '../public/app.js?raw';
 import headersFile from '../public/_headers?raw';
 import terms from '../public/terms.html?raw';
 import privacy from '../public/privacy.html?raw';
+import sitemap from '../public/sitemap.xml?raw';
+import robots from '../public/robots.txt?raw';
 
 // The card image itself, as a data URI: binary cannot be read from disk in a
 // runtime with no filesystem, and its real dimensions are what the metadata
@@ -239,5 +241,29 @@ describe('link preview metadata', () => {
 
   it('gives the image alt text', () => {
     expect(metaContent(html, 'og:image:alt')).toBeTruthy();
+  });
+});
+
+describe('search engine discovery', () => {
+  const SITE = 'https://crypto.cloudils.com';
+
+  it('lists exactly the public pages in the sitemap, each with a lastmod', () => {
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+
+    expect(locs).toEqual([`${SITE}/`, `${SITE}/terms`, `${SITE}/privacy`]);
+    expect(
+      sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g),
+    ).toHaveLength(locs.length);
+  });
+
+  it('points robots.txt at the sitemap and keeps the API crawlable', () => {
+    // The dashboard renders its prices from /api/*; a crawler blocked from it
+    // indexes an empty page.
+    expect(robots).toContain(`Sitemap: ${SITE}/sitemap.xml`);
+    expect(robots).not.toMatch(/Disallow:\s*\/api/);
+  });
+
+  it('links to the main domain, which is what lists this project', () => {
+    expect(html).toContain('href="https://cloudils.com/projects"');
   });
 });
