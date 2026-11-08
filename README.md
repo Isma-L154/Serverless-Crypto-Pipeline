@@ -1,6 +1,6 @@
 # Serverless Crypto Pipeline
 
-![Serverless Crypto Pipeline banner](docs/brand/banner.svg)
+![Serverless Crypto Pipeline banner](docs/brand/banner.png)
 
 [![CI](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/codeql.yml/badge.svg)](https://github.com/Isma-L154/Serverless-Crypto-Pipeline/actions/workflows/codeql.yml)
